@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'maven-publish'
 
 def globalConfiguration = rootProject.extensions.getByName("ext")
 
@@ -22,21 +22,33 @@ android {
 
 dependencies {
     def libraryDependencies = globalConfiguration.assetsLibraryDependencies
-    compile project(':HintCase')
-    compile libraryDependencies.AppCompat
+    implementation project(':HintCase')
+    implementation libraryDependencies.AppCompat
 }
 
-publish {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
 
-    userOrg = globalConfiguration.getAt("jcenterUserOrganization")
-    groupId = globalConfiguration.getAt("jcenterGroupId")
-    artifactId = globalConfiguration.getAt("jcenterArtifactIdAssetsLibrary")
-    publishVersion = globalConfiguration.getAt("androidVersionNameAssetsLibrary")
-    desc = globalConfiguration.getAt("jcenterDescriptionAssetsLibrary")
-    website = globalConfiguration.getAt("jcenterWebsite")
-    repository = globalConfiguration.getAt("jcenterRepository")
-    bintrayUser = properties.getProperty("bintrayUser")
-    bintrayKey = properties.getProperty("bintrayKey")
+                groupId = globalConfiguration.getAt("jcenterGroupId")
+                artifactId = globalConfiguration.getAt("jcenterArtifactIdAssetsLibrary")
+                version = globalConfiguration.getAt("androidVersionNameAssetsLibrary")
+
+                pom {
+                    name = globalConfiguration.getAt("jcenterArtifactIdAssetsLibrary")
+                    description = globalConfiguration.getAt("jcenterDescriptionAssetsLibrary")
+                    url = globalConfiguration.getAt("jcenterWebsite")
+                }
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
+}
+
+tasks.named('publishToMavenLocal') {
+    dependsOn 'publishReleasePublicationToMavenLocal'
 }
